@@ -144,6 +144,7 @@ func execfn(call otto.FunctionCall) otto.Value {
 		return jsvm.Callback(errCb, "no cmd")
 	}
 	c := exec.Command(cmdList[0], cmdList[1:]...)
+	c.Stdout = os.Stdout
 	go func() {
 		err = c.Run()
 		if err != nil {

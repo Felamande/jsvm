@@ -4,8 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"path/filepath"
-	"runtime"
 
 	"github.com/Felamande/otto"
 )
@@ -20,7 +18,7 @@ type module struct {
 	obj      *otto.Object
 	methods  map[string]interface{}
 	required bool
-	register string
+	// register string
 }
 
 type builtin struct {
@@ -83,12 +81,7 @@ func require(call otto.FunctionCall) otto.Value {
 }
 
 func Module(name string) *module {
-	_, file, _, _ := runtime.Caller(1)
-	reg := filepath.Dir(file)
 	if m, exist := modules[name]; exist {
-		if m.register != reg {
-			return nil
-		}
 		return m
 
 	}
@@ -96,7 +89,7 @@ func Module(name string) *module {
 
 	vm.Set(name, o)
 
-	m := &module{o, make(map[string]interface{}), false, reg}
+	m := &module{o, make(map[string]interface{}), false}
 	modules[name] = m
 	return m
 }
@@ -153,3 +146,13 @@ func CbGetValue(cb otto.Value, arg otto.Value) (string, error) {
 	}
 	return v.String(), nil
 }
+
+func ToObject(o O) otto.Value {
+	oo, _ := vm.Object(`({})`)
+	for name, value := range o {
+		oo.Set(name, value)
+	}
+	return oo.Value()
+}
+
+type O map[string]interface{}

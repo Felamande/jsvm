@@ -4,6 +4,7 @@ import (
 
 	// "errors"
 
+	"path"
 	"path/filepath"
 
 	"github.com/Felamande/jsvm"
@@ -29,11 +30,20 @@ func join(call otto.FunctionCall) otto.Value {
 		}
 	}
 	path := filepath.Join(pathList...)
-	v, _ := otto.ToValue(path)
+	v, _ := otto.ToValue(filepath.ToSlash(path))
 	return v
 }
 
 func dir(call otto.FunctionCall) otto.Value {
 	p := call.Argument(0).String()
-	return jsvm.StringValue(filepath.Dir(p))
+	p = filepath.ToSlash(p)
+	if filepath.IsAbs(p) {
+		return jsvm.StringValue(path.Dir(p))
+	}
+	var suffix string
+	dir := path.Dir(p)
+	if dir != "." && dir != ".." {
+		suffix = "./"
+	}
+	return jsvm.StringValue(suffix + dir)
 }
