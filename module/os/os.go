@@ -25,6 +25,7 @@ func init() {
 	p.Extend("writeFile", writeFile)
 	p.Extend("rename", rename)
 	p.Extend("exec", execfn)
+	p.Extend("setenv", setenv)
 }
 
 func readFile(call otto.FunctionCall) otto.Value {
@@ -230,6 +231,22 @@ func rename(call otto.FunctionCall) otto.Value {
 	if err != nil {
 		jsvm.Callback(errCb, err.Error())
 	}
+	return otto.UndefinedValue()
+
+}
+
+func setenv(call otto.FunctionCall) otto.Value {
+	objv := call.Argument(0)
+	errCb := call.Argument(1)
+	if !objv.IsObject() {
+		return jsvm.Callback(errCb, "invalid object.")
+	}
+
+	obj := objv.Object()
+	obj.ForEach(func(key string) {
+		v, _ := obj.Get(key)
+		os.Setenv(key, v.String())
+	})
 	return otto.UndefinedValue()
 
 }
