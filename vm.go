@@ -2,7 +2,6 @@ package jsvm
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 
 	"github.com/Felamande/otto"
@@ -13,6 +12,11 @@ import (
 // 	Obj() *otto.Object
 // 	Type() ObjType
 // }
+type Func otto.Value
+
+func (f Func) Call(args ...interface{}) {
+	Callback(otto.Value(f), args...)
+}
 
 type module struct {
 	obj      *otto.Object
@@ -101,17 +105,22 @@ func (m *module) Obj() *otto.Object {
 	return m.obj
 }
 
-func Run(src interface{}) error {
-	n := src.(string)
-	if fi, _ := os.Stat(n); fi == nil {
-		_, err := vm.Run(n)
-		return err
+func Run(src string) error {
+	var script *otto.Script
+	var err error
+	if fi, _ := os.Stat(src); fi == nil {
+		script, err = vm.Compile("", src)
+
+	} else {
+
+		script, err = vm.Compile(src, nil)
 	}
-	b, err := ioutil.ReadFile(n)
+
 	if err != nil {
 		return err
 	}
-	_, err = vm.Run(string(b))
+
+	_, err = vm.Run(script)
 	return err
 }
 
@@ -121,7 +130,7 @@ func StringValue(s string) otto.Value {
 }
 
 func ErrorValue(err error) otto.Value {
-	value, _ := otto.ToValue(err)
+	value, _ := otto.ToValue(err.Error())
 	return value
 }
 
